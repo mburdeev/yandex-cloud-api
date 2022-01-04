@@ -1,0 +1,4 @@
+.env
+.iamtoken
+/venv/
+__pycache__/
