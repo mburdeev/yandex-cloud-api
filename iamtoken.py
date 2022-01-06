@@ -12,16 +12,17 @@ class IamToken:
     API_URL = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
     FILE = ".iamtoken"
     DT_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
+    TIME_TO_UPDATE = timedelta(hours=1)
 
-    def __init__(self, oauth_token=None):
-        self.oauth_token = config.OAUTH_TOKEN
+    def __init__(self, oauth_token=config.OAUTH_TOKEN):
+        self.oauth_token = oauth_token
         try:
             self.load_from_file()
             self.check_freshness()
         except FileNotFoundError:
             self.token_request()
         except Exception as e:
-            logger.exception("Load from file error:")
+            logger.exception("Init IamToken Error")
             raise
 
     def token_request(self):
@@ -34,7 +35,7 @@ class IamToken:
         self.save_to_file()
 
     def check_freshness(self):
-        if self.received_at - self.now() > timedelta(hours=1):
+        if self.now() - self.received_at > IamToken.TIME_TO_UPDATE:
             self.token_request()
 
     @property
@@ -42,6 +43,7 @@ class IamToken:
         self.check_freshness()
         return self._token
 
+    # Caching the token to a JSON file:
     def save_to_file(self, file=None):
         file = file or self.FILE
 
